@@ -3,6 +3,7 @@
 
   <script src="jsf.js"></script>
   <script>
+
    jsf.html.event.onDocumentLoad(function(){
      var test = jsf.html.dom.byId('test');
      console.log(test);
@@ -16,15 +17,6 @@
                    function stateChanged(response) {
                      console.log('state changed');
                    });
-   });
-
-   var arr = [];
-   arr.push('1');
-   arr.push('2');
-   arr.push('3');
-
-   jsf.util.foreach(arr, function(element) {
-     console.log(element);
    });
 
   </script>

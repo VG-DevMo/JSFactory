@@ -233,6 +233,16 @@ class jsfMath {
 
 class jsfUtil {
 
+    
+  /*
+  * @param condition condition which is asserted
+  */
+  assert(condition) {
+    if(!condition) {
+      throw new Error('Assertion failed');
+    }
+  }
+    
   /**
   * @param {array} array
   * @param {function} func

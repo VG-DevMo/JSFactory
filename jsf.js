@@ -234,7 +234,7 @@ class jsfMath {
 class jsfUtil {
 
     
-  /*
+  /**
   * @param condition condition which is asserted
   */
   assert(condition) {

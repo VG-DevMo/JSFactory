@@ -600,5 +600,18 @@ class jsfList {
       }
     }
   }
-
+    
 }
+
+
+/*******************************************************************************
+* function-pool
+*******************************************************************************/
+/**
+* @param {condition} condition condition which is asserted
+*/
+function assert (condition) {
+    /* call framework assert-method */
+    jsf.util.assert(condition);
+}
+    

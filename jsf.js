@@ -9,7 +9,7 @@ class jsf {
     * returns an instance of jsfXHTTP
     */
     static get xhttp () {
-      return new jsfXHTTP();
+      return jsfXHTTP.instance;
     }
 
     /**
@@ -63,70 +63,118 @@ class jsf {
 const _POST = 'POST';
 const _GET = 'GET';
 const _SET = 'SET';
+var jsfXHTTPInstance = null;
 
 class jsfXHTTP {
 
   /**
-  * @param {string} path php-file path
-  * @param {array} data xhttp-request data
-  * @param {function} success function which will be executed on success
-  * @param {function} error function which will be executed on error
-  * @param {function} stateChanged function which will be executed by a state change
-  */
-  post (path, data, success, error, stateChanged) {
-
-      var xhttp = new XMLHttpRequest();
-
-      xhttp.onreadystatechange = function() {
-        if (this.status == 200) {
-          if (typeof success !== undefined && typeof success == 'function') {
-              if(this.resonseText != '' || this.response != '') {
-                return success(this);
-              }
-          }
-
-        } else if (this.status == 4) {
-          if (typeof error !== undefined && typeof error == 'function') {
-            return error(this);
-          }
-
-        } else {
-          if (typeof stateChanged !== undefined && typeof stateChanged == 'function') {
-            return stateChanged(this);
-          }
-        }
-
-      };
-
-      var requestString = '';
-
-      jsf.util.foreach(data, function(e, i) {
-        if (i != 0) {
-          requestString += '&';
-        }
-        requestString += e.toString();
-      });
-
-      xhttp.open(_POST, path, true);
-      xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-      xhttp.send(requestString);
-
+   * get singleton instance
+   */
+  static get instance () {
+    if (jsfXHTTPInstance == null) {
+      jsfXHTTPInstance = new jsfXHTTP();
+    }
+    return jsfXHTTPInstance;
   }
 
   /**
-  * @param {string} url data-url
-  * @param {function} success function which will be executed on success
-  * @param {function} error function which will be executed on error
-  * @param {function} stateChanged function which will be executed by a state change
-  */
-  get (url, success, error, stateChanged) {
+   * constructor
+   */
+  constructor () {
+    this.id = jsf.util.generateGUID();
+    this.getCallBuffer = new jsfList(_OBJECT);
+  }
+
+  /**
+   * @param {string} url request-url
+   * @param {object} handler request-handling
+   */
+  post (url, handler) {
+
+    var urlParameters = handler.urlParameters;
+    var success = handler.success;
+    var error = handler.error;
+    var stateChanged = handler.stateListener;
 
     var xhttp = new XMLHttpRequest();
 
     xhttp.onreadystatechange = function() {
       if (this.status == 200) {
         if (typeof success !== undefined && typeof success == 'function') {
-          if(this.resonseText != '' || this.response != '') {
+            if(this.resonseText != '' || this.response != '') {
+              return success(this);
+            }
+        }
+
+      } else if (this.status == 4) {
+        if (typeof error !== undefined && typeof error == 'function') {
+          return error(this);
+        }
+
+      } else {
+        if (typeof stateChanged !== undefined && typeof stateChanged == 'function') {
+          return stateChanged(this);
+        }
+      }
+
+    };
+
+    var requestString = '';
+
+    for(var prop in urlParameters) {
+      if(urlParameters.hasOwnProperty(prop)) {
+        var urlParam = prop.toString() + '=' + urlParameters[prop].toString();
+        requestString += urlParam;
+        requestString += '&';
+      }
+    }
+
+    requestString = requestString.substring(0, ( requestString.length - 1 ));
+
+    xhttp.open(_POST, url, true);
+    xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhttp.send(requestString);
+
+  }
+
+  /**
+   * @param {string} url 
+   * @param {string} action 
+   * @param {object} handler 
+   */
+  postAction (url, action, handler) {
+
+    var urlParameters = handler.urlParameters;
+
+    if(urlParameters == null) {
+      urlParameters = {};
+    }
+
+    urlParameters.action = action;
+
+    handler.urlParameters = urlParameters;
+
+    this.post(url, handler);
+
+  }
+
+  /**
+   * @param {string} url 
+   * @param {object} handler 
+   */
+  get (url, handler) {
+
+    var success = handler.success;
+    var error = handler.error;
+    var stateChanged = handler.stateListener;
+
+    var xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function() {
+      if (this.status == 200) {
+        if (typeof success !== undefined && typeof success == 'function') {
+          if(this.responseText != '' || this.response != '') {
+            jsf.xhttp.addElementToBuffer(url, this.responseText);
             return success(this);
           }
         }
@@ -149,8 +197,36 @@ class jsfXHTTP {
 
   }
 
-  set () {
+  /**
+   * cleares the internal buffer
+   */
+  clearBuffer () {
+    this.getCallBuffer = null;
+    this.getCallBuffer = new jsfList(_OBJECT);
+  }
 
+  /**
+   * adding get-element to buffer
+   * @param {string} url 
+   * @param {string} content 
+   */
+  addElementToBuffer (url, content) {
+    this.getCallBuffer.add({
+      url: url,
+      content: content
+    });
+  }
+
+  /**
+   * get content from buffer
+   * @param {string} url 
+   */
+  getFromBuffer (url) {
+    this.getCallBuffer.foreach(function(e) {
+        if (e.url == url) {
+          return e.content;
+        }
+    });
   }
 
 }
@@ -242,7 +318,19 @@ class jsfUtil {
       throw new Error('Assertion failed');
     }
   }
-    
+  
+  /**
+   * returns an guid (no guarantee)
+   */
+  generateGUID() {
+    function s4() {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    }
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();  
+  }
+
   /**
   * @param {array} array
   * @param {function} func
@@ -614,4 +702,11 @@ function assert (condition) {
     /* call framework assert-method */
     jsf.util.assert(condition);
 }
-    
+  
+/**
+ * returns an guid (see class documentation)
+ */
+function generateGUID () {
+  /* call framework GUID method */
+  return jsf.util.generateGUID();
+}

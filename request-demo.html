@@ -11,21 +11,33 @@
       var out = jsf.html.dom.byId('begruessung');
       var out2 = jsf.html.dom.byId('buch');
 
-      jsf.xhttp.post('server.php', [
-        'action=test',
-        ('name=' + val.get.value)
-      ],
-      function success (response) {
-        out.get.innerHTML = response.responseText;
-      },
-      function error (response) {
-        console.error("request error");
+      console.log(jsf.xhttp);
+
+      jsf.xhttp.post('server.php', {
+        urlParameters: {
+          action: 'test',
+          name: val.get.value
+        },
+        success: function(response) {
+          out.get.innerHTML = response.responseText;
+        },
+        error: function(response) {
+          console.error("request error");
+        },
+        stateListener: function(response) {
+          console.log('state changed');
+        }
       });
 
-      jsf.xhttp.get('buch.txt',
-      function success (response) {
-        out2.get.innerHTML = response.responseText;
+      console.log(jsf.xhttp);
+
+      jsf.xhttp.get('buch.txt', {
+        success: function (response) {
+          out2.get.innerHTML = response.responseText;
+        }
       });
+
+      console.log(jsf.xhttp);
 
     }
 

@@ -229,8 +229,31 @@ class jsfXHTTP {
     });
   }
 
+  /**
+   * @param {object} handler 
+   */
+  getWebSocket(handler) {
+    var webSocket = new jsfWebSocket();
+    webSocket.init(handler);
+    return webSocket;
+  }
+
 }
 
+class jsfWebSocket {
+
+  constructor() {
+    console.log('Websocket created');
+  }
+
+  /**
+   * @param {object} handler 
+   */
+  init(handler) {
+    console.log('websocket initted');
+  };
+
+}
 
 class jsfHTML {
 
@@ -302,14 +325,62 @@ class jsfEvent {
 
 class jsfMath {
 
+  /**
+   * @param {array} numberArray 
+   * @param {numeric} number 
+   */
+  addNumberToArray(numberArray, number) {
+    var returnArray;
+    jsf.util.foreach(numberArray, function(e) {
+      var result;
+      result = parseFloat(e) + parseFloat(number);
+      returnArray.push(parseFloat(result));
+      jsf.util.clear(result);
+    });
+    return returnArray;
+  }
 
+  /**
+   * @param {array} numberArray 
+   * @param {numeric} number 
+   */
+  subtrateNumberFromArray(numberArray, number) {
+    var returnArray;
+    jsf.util.foreach(numberArray, function(e) {
+      var result;
+      result = parseFloat(e) - parseFloat(number);
+      returnArray.push(parseFloat(result));
+      jsf.util.clear(result);
+    });
+    return returnArray;
+  }
 
 }
 
 
 class jsfUtil {
 
-    
+  /**
+   * @param {any} v 
+   */
+  clear(v) {
+    var t = typeof v;
+    switch(t) {
+      case undefined: 
+        return undefined;
+      case 'object': 
+        return null;
+      case 'number':
+        return 0;
+      case 'boolean':
+        return false;
+      case 'string':
+        return '';
+      default: 
+        return undefined;
+    }
+  }
+
   /**
   * @param condition condition which is asserted
   */
@@ -479,6 +550,47 @@ class jsfElement {
 }
 
 class jsfBrowser {
+
+    /**
+     * @param {string} param name of url parameter 
+     */
+    getUrlParameterByName(param) {
+      var found = false;
+      var returnVal = '';
+      var parameters = this.getUrlParameters();
+      jsf.util.foreach(parameters, function(e) {
+        if (!found) {
+          var name, val, parameter;
+          parameter = e.toString().split('=');
+          name = parameter[0];
+          val = parameter[1];
+          if (name == param) {
+            returnVal = val;
+            found = true;
+          }
+        }
+      });
+      return returnVal;
+    }
+
+    /**
+     * returns the url-parameters as array
+     */
+    getUrlParameters() {
+      var currentUrl = this.getUrl();
+      var url = new URL(currentUrl);
+      var searchParams = url.search;
+      searchParams = searchParams.substring(1);
+      var splitArray = searchParams.split('&');
+      return splitArray;
+    }
+
+    /**
+     * returns the site-url
+     */
+    getUrl() {
+      return window.location.href;
+    }
 
     /**
     * goes back in browser history
@@ -709,4 +821,12 @@ function assert (condition) {
 function generateGUID () {
   /* call framework GUID method */
   return jsf.util.generateGUID();
+}
+
+/**
+ * @param {any} v 
+ */
+function clear(v) {
+  /* call framework clear method */
+  return jsf.util.clear(v);
 }
